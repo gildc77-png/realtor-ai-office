@@ -18,13 +18,21 @@ export const metadata: Metadata = {
     "AI Virtual Assistant for Real Estate Professionals — Autonomous by Default. Human by Exception.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
+      data-theme="dark"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-950 text-slate-100">{children}</body>
+      <body className="min-h-full bg-[var(--background)] text-[var(--text-primary)]">
+        {children}
+      </body>
     </html>
   );
 }
