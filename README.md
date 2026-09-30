@@ -52,6 +52,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 If your Supabase project uses a newer publishable key naming convention, align the variable name with that project guidance rather than assuming a fixed name. The application does not use privileged or admin credentials at this stage.
 
+Authentication uses the existing Supabase project and `@supabase/ssr`. Configure the Supabase Auth redirect allowlist for local and deployed `/auth/callback` URLs. Apply any unapplied migrations in `supabase/migrations` in chronological order before completing workspace onboarding. Never commit `.env.local` or service-role credentials.
+
 ## High-level future architecture
 
 The foundation is structured to support future domain areas such as:
@@ -86,7 +88,7 @@ The long-term platform must be designed with trust-first principles:
 - Sensitive and externally visible actions must require explicit approval policies.
 - AI-initiated actions must remain auditable and reviewable.
 
-No database tables, migrations, RLS policies, or privileged admin flows are implemented in this phase.
+Tenant schema, RLS, and the secure workspace-onboarding migration are maintained under `supabase/migrations`. Their remote application state depends on the configured Supabase project; application code does not use privileged admin credentials.
 
 ## Explicitly not implemented yet
 
@@ -97,11 +99,10 @@ No database tables, migrations, RLS policies, or privileged admin flows are impl
 - OpenAI API calls
 - AI background workers
 - external provider integrations
-- authentication flows
 - payment/billing systems
-- production data access
+- persistent Properties and Leads data access
 
-This is a local foundation only.
+Email/password authentication, cookie-backed sessions, protected application routes, organization onboarding, and account context are implemented as the FOUNDATION-003 baseline. Real Properties/Leads CRUD and external integrations remain deferred.
 
 ## Architecture overview
 

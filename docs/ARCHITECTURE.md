@@ -61,15 +61,41 @@ These roles should be represented through a shared type layer and used by server
 
 ## Authentication architecture
 
-The project uses Supabase Auth as the expected authentication foundation for App Router usage.
+The application uses Supabase Auth with `@supabase/ssr` and cookie-backed sessions in the Next.js App Router.
 
-Required architecture boundaries:
+Session and route boundaries:
 
-- browser client for auth session hydration and UI interactions
-- server client for route protection and session awareness
-- protected routes for authenticated-only sections
-- session validation using Supabase server utilities
-- no service-role or database credentials exposed to browser code
+- the browser client uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- server components read the same session through the cookie-bound server client and verify identity with `auth.getUser()`
+- `src/proxy.ts` refreshes session cookies and redirects unauthenticated requests for protected route families while preserving a local return path
+- the `(office)` server layout independently requires a verified user, profile, active membership, and organization before rendering protected content
+- Proxy is a refresh/early-redirect layer, not the sole authorization boundary
+- auth callback exchanges PKCE codes server-side and accepts only same-origin internal return paths
+- no service-role or database credentials are exposed to browser code
+
+The environment contract remains `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Auth callback URLs for local and deployed origins must be included in the Supabase Auth redirect allowlist.
+
+### Session, tenant, and role resolution
+
+Server-side context resolution follows:
+
+`auth.getUser()` → `profiles.auth_user_id` → earliest active `organization_memberships` row → `organizations.id` → validated centralized role.
+
+The earliest active membership is the default organization for this foundation. The query is per-request/server-render scoped; organization switching can replace this selection later. Missing profile or active membership routes the authenticated account to `/onboarding`; an unavailable or inconsistent workspace fails closed and presents recovery/sign-out guidance.
+
+`requireUser`, `requireMembership`, `requireOrganization`, and `requireRole` are server-side helpers. Roles derive from database membership, never from form fields, browser state, or URL input. Central role capabilities are intentionally small: owner/admin can manage workspace and members; agents can perform normal operations; assistant/viewer are read-only until scoped support permissions are defined; approvals remain explicit.
+
+### Onboarding lifecycle
+
+Signup stores the submitted name only as auth metadata. Once a user is authenticated, onboarding invokes `public.complete_workspace_onboarding` with the name and workspace name. The security-definer function derives `auth.uid()` and email from the Supabase JWT/auth schema, locks onboarding per user, upserts that user's profile, and atomically creates a new organization, active owner membership, conservative `prepare_approve` autonomy policy, and audit events. The browser cannot provide a user ID, organization ID, or role. Function execution is revoked from `PUBLIC`/`anon` and granted only to `authenticated`.
+
+The RPC is added in `20260930_003_secure_workspace_onboarding.sql`; existing migrations are not rewritten. Apply outstanding migrations in chronological order before using onboarding. The database function uses no service-role credential.
+
+### Account context and deferred authentication work
+
+Settings and the sidebar display the resolved profile/email, organization, role, and initials fallback. Logout clears the Supabase browser session and routes to `/login`; protected server layouts still reject a stale/back-button request. Password recovery uses a PKCE callback and does not log tokens or reveal whether an email is registered.
+
+Email/password auth, reset, session persistence, tenant onboarding, and protected-route enforcement are in scope. Organization switching, invitations, advanced permission editing, persistent business CRUD, AI execution, and external integrations remain deferred. Dashboard figures remain demonstration data, not tenant records.
 
 The current environment-variable contract remains the baseline for Supabase client values, and no secret keys are stored in app code.
 

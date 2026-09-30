@@ -1,22 +1,22 @@
-import { createClient } from "@supabase/supabase-js";
+"use client";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/lib/supabase/env";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    "Supabase environment variables are not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to continue with browser-side client setup.",
-  );
+let browserClient: SupabaseClient | null = null;
+
+export function createSupabaseBrowserClient(): SupabaseClient | null {
+  if (browserClient) {
+    return browserClient;
+  }
+
+  const config = getSupabasePublicConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  browserClient = createBrowserClient(config.url, config.anonKey);
+  return browserClient;
 }
-
-export const supabaseClient = createClient(
-  supabaseUrl ?? "",
-  supabaseAnonKey ?? "",
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  },
-);

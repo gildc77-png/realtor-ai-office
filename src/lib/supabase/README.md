@@ -1,12 +1,12 @@
 # Supabase integration
 
-This folder is prepared for future Supabase client usage.
+The application uses `@supabase/ssr` with the existing public environment contract:
 
-Current status:
+- `client.ts` creates the browser client from the anon key only.
+- `server.ts` creates a cookie-bound server client for App Router requests.
+- `src/proxy.ts` refreshes sessions and redirects unauthenticated protected-route requests.
+- Server layouts independently verify the user and active organization membership before rendering protected pages.
 
-- browser/client usage is defined in client.ts
-- server usage is defined in server.ts
-- no database tables, migrations, or RLS policies have been created
-- no privileged or admin Supabase operations are configured
+No service-role key or database password is used by application code. Set the public URL and anon key through local ignored environment files or deployment environment configuration. Never commit populated environment files.
 
-Environment values must be provided via .env.local or deployment platform environment variables.
+Database schema and RLS are managed by the ordered SQL migrations in `supabase/migrations`. The workspace onboarding RPC is `20260930_003_secure_workspace_onboarding.sql`; it derives the user and owner role from the verified Supabase JWT and creates tenant records atomically.

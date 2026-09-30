@@ -17,7 +17,15 @@ const navItems = [
   { label: "Settings", href: "/settings", icon: "⚙" },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export type AppShellIdentity = {
+  name: string;
+  email: string;
+  initials: string;
+  role: string;
+  organization: string;
+};
+
+export function AppShell({ children, identity }: { children: ReactNode; identity: AppShellIdentity }) {
   const pathname = usePathname();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -50,11 +58,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
 
-        <Link className="profile-summary profile-link" href="/settings" aria-label="Perfil de Carlos M., abrir configuración">
-          <div className="profile-avatar" aria-hidden="true">CM</div>
+        <Link className="profile-summary profile-link" href="/settings" aria-label={`Account for ${identity.name}, open settings`}>
+          <div className="profile-avatar" aria-hidden="true">{identity.initials}</div>
           <div>
-            <p className="profile-name">Carlos M.</p>
-            <p className="profile-role">Real Estate Agent</p>
+            <p className="profile-name" title={identity.email}>{identity.name}</p>
+            <p className="profile-role" title={identity.organization}>{identity.role}</p>
           </div>
         </Link>
       </aside>

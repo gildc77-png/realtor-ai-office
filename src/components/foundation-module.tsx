@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 export type ModuleKey =
   | "properties"
@@ -77,8 +78,50 @@ const moduleContent: Record<ModuleKey, { title: string; description: string; det
   },
 };
 
-export function FoundationModule({ module }: { module: ModuleKey }) {
+export type AccountDetails = {
+  name: string;
+  email: string;
+  organization: string;
+  role: string;
+};
+
+export function FoundationModule({ module, account }: { module: ModuleKey; account?: AccountDetails }) {
   const content = moduleContent[module];
+
+  if (module === "settings" && account) {
+    return (
+      <section className="foundation-page" aria-labelledby="module-title">
+        <header className="foundation-header">
+          <div>
+            <p className="eyebrow">Realtor AI Office</p>
+            <h1 id="module-title">Settings</h1>
+            <p>Manage your account and current workspace.</p>
+          </div>
+        </header>
+        <div className="account-grid">
+          <section className="panel account-panel" aria-labelledby="account-heading">
+            <h2 id="account-heading">Account</h2>
+            <dl>
+              <div><dt>Name</dt><dd>{account.name}</dd></div>
+              <div><dt>Email</dt><dd>{account.email}</dd></div>
+            </dl>
+          </section>
+          <section className="panel account-panel" aria-labelledby="workspace-heading">
+            <h2 id="workspace-heading">Workspace</h2>
+            <dl>
+              <div><dt>Organization</dt><dd>{account.organization}</dd></div>
+              <div><dt>Current role</dt><dd>{account.role}</dd></div>
+            </dl>
+          </section>
+          <section className="panel account-panel" aria-labelledby="session-heading">
+            <h2 id="session-heading">Session</h2>
+            <p>Sign out of this account on this device.</p>
+            <SignOutButton />
+          </section>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="foundation-page" aria-labelledby="module-title">
